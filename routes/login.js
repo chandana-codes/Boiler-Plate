@@ -1,32 +1,36 @@
-// routes/login.js
-
 const express = require("express");
-const router = express.Router();
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const sqlite3 = require("sqlite3").verbose();
 
-const db = require("../db");
+const router = express.Router();
+const db = new sqlite3.Database("mydatabase.db");
 
 router.post("/", (req, res) => {
-  const { username, password } = req.body;
+  // Handle login logic
+  const { emailId, password } = req.body;
 
-  const sql = "SELECT * FROM users WHERE username = ?";
-  db.get(sql, [username], (err, row) => {
+  // Retrieve user from the database
+  db.get("SELECT * FROM users WHERE username = ?", [emailId], (err, user) => {
     if (err) {
-      return res.status(500).json({ message: "Internal Server Error" });
+      return res.status(500).json({ error: "Internal Server Error" });
     }
 
-    if (!row) {
-      return res.status(401).json({ message: "Invalid credentials" });
+    if (!user) {
+      return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    bcrypt.compare(password, row.password, (err, result) => {
+    // Compare hashed password
+    bcrypt.compare(password, user.password, (err, result) => {
       if (err || !result) {
-        return res.status(401).json({ message: "Invalid credentials" });
+        return res.status(401).json({ error: "Invalid credentials" });
       }
-      res.json({
-        message: "Login successful",
-        user: { id: row.id, username: row.username },
+
+      // Generate JWT token
+      const token = jwt.sign({ emailId }, "your-secret-key", {
+        expiresIn: "1h",
       });
+      res.json({ message: "Login successful", token });
     });
   });
 });

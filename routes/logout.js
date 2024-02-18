@@ -1,10 +1,9 @@
-// routes/logout.js
-
 const express = require("express");
+
 const router = express.Router();
 
 router.post("/", (req, res) => {
-  // You can clear the session, token, or perform any necessary logout operations here
+  // Handle logout logic
   res.json({ message: "Logout successful" });
 });
 

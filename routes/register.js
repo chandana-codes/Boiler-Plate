@@ -1,26 +1,32 @@
-// routes/register.js
-
 const express = require("express");
-const router = express.Router();
 const bcrypt = require("bcrypt");
+const sqlite3 = require("sqlite3").verbose();
 
-const db = require("../mydatabase.db");
+const router = express.Router();
+const db = new sqlite3.Database("mydatabase.db");
 
 router.post("/", (req, res) => {
-  const { username, password } = req.body;
+  // Handle registration logic
+  const { emailId, password } = req.body;
 
-  bcrypt.hash(password, 10, (err, hash) => {
+  // Hash the password
+  bcrypt.hash(password, 10, (err, hashedPassword) => {
     if (err) {
-      return res.status(500).json({ message: "Internal Server Error" });
+      return res.status(500).json({ error: "Internal Server Error" });
     }
 
-    const sql = "INSERT INTO users (username, password) VALUES (?, ?)";
-    db.run(sql, [username, hash], (err) => {
-      if (err) {
-        return res.status(400).json({ message: "Username already exists" });
+    // Store the user in the database
+    db.run(
+      "INSERT INTO users (emailId, password) VALUES (?, ?)",
+      [emailId, hashedPassword],
+      (err) => {
+        if (err) {
+          return res.status(500).json({ error: "Internal Server Error" });
+        }
+
+        res.json({ message: "Registration successful" });
       }
-      res.status(201).json({ message: "User registered successfully" });
-    });
+    );
   });
 });
 

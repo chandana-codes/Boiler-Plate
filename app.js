@@ -1,31 +1,38 @@
 const express = require("express");
-const sqlite3 = require("sqlite3").verbose();
-const bcrypt = require("bcrypt");
-const bodyParser = require("body-parser");
+const session = require("express-session");
+const registerRoute = require("./routes/register");
+const loginRoute = require("./routes/login");
+const logoutRoute = require("./routes/logout");
+const crypto = require("crypto");
 
 const app = express();
-const port = 3000;
+const port = 3010;
 
-// Configure SQLite database
-const db = new sqlite3.Database("mydatabase.db");
+app.use(express.json());
 
-// Create users table if not exists
-db.serialize(() => {
-  db.run(
-    "CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, password TEXT)"
-  );
-});
+// Generate a random string of 64 characters
+const generateRandomString = () => {
+  return crypto.randomBytes(32).toString("hex");
+};
 
-// Body parser middleware
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+const secretKey = generateRandomString();
+console.log("Generated secret key:", secretKey);
 
-// Define routes
-app.use("/register", require("./routes/register"));
-app.use("/login", require("./routes/login"));
-app.use("/logout", require("./routes/logout"));
+// Configure express-session middleware
+app.use(
+  session({
+    secret: secretKey,
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false },
+  })
+);
 
-// Start server
+// Routes
+app.use("/register", registerRoute);
+app.use("/login", loginRoute);
+app.use("/logout", logoutRoute);
+
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });
