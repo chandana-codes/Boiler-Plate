@@ -16,7 +16,7 @@ const generateRandomString = () => {
 };
 
 const secretKey = generateRandomString();
-console.log("Generated secret key:", secretKey);
+// console.log("Generated secret key:", secretKey);
 
 // Configure express-session middleware
 app.use(
